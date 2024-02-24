@@ -20,6 +20,7 @@ class Service {
       serve: async (value: number) => {
         this.log(`Serving value = ${value}...`)
         await async_function(value)
+        this.dequeue()
       },
     }))
   }
@@ -41,6 +42,13 @@ class Service {
     this.serveNext()
   }
 
+  dequeue() {
+    if (this.queue.length > 0) {
+      const value = this.queue.shift()
+      this.serve(value as number)
+    }
+  }
+
   serveNext() {
     const nextValue = this.queue[0]
     if (nextValue) {
@@ -50,7 +58,7 @@ class Service {
 
   async serve(value: number) {
     const freeCounter = this.serviceCounters.find(
-      (counter: any) => counter.isFree
+      (counter: any) => counter.isAvailable
     )
     if (freeCounter) {
       freeCounter.isAvailable = false
@@ -71,4 +79,5 @@ export const simulateFunction = async (
 ) => {
   const service = new Service(async_function, concurrency_limit)
   service.enqueue(array_of_values)
+  return service
 }
